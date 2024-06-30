@@ -1,10 +1,14 @@
 package com.github.mertakdut;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 
 import com.github.mertakdut.exception.ReadingException;
 
 class Container extends BaseFindings {
+
+	private static final Logger log = LoggerFactory.getLogger(Container.class);
 
 	private XmlItem rootFile;
 
@@ -18,7 +22,7 @@ class Container extends BaseFindings {
 
 	public String getFullPathValue() throws ReadingException {
 		if (getRootFile() != null && getRootFile().getAttributes() != null && getRootFile().getAttributes().containsKey("full-path") && getRootFile().getAttributes().get("full-path") != null
-				&& !getRootFile().getAttributes().get("full-path").equals("")) {
+				&& !getRootFile().getAttributes().get("full-path").isEmpty()) {
 			return getRootFile().getAttributes().get("full-path");
 		} else {
 			throw new ReadingException(Constants.EXTENSION_OPF + " file not found.");
@@ -27,7 +31,7 @@ class Container extends BaseFindings {
 
 	@Override
 	public boolean fillContent(Node node) {
-		if (node.getNodeName() != null && node.getNodeName().equals("rootfile")) {
+		if (node.getNodeName().equals("rootfile")) {
 			this.rootFile = nodeToXmlItem(node);
 			return true;
 		}
@@ -37,8 +41,8 @@ class Container extends BaseFindings {
 
 	// debug
 	public void print() {
-		System.out.println("\n\nPrinting Container...\n");
-		System.out.println("title: " + (getRootFile() != null ? getRootFile().getValue() : null));
+		log.debug("Printing Container...");
+		log.debug("title: {}", (getRootFile() != null ? getRootFile().getValue() : null));
 	}
 
 }

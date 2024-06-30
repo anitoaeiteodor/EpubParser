@@ -2,6 +2,10 @@ package com.github.mertakdut;
 
 class Constants {
 
+	private Constants() {
+		// empty constructor
+	}
+
 	// Core files
 	static final String FILE_NAME_CONTAINER_XML = "container.xml";
 	static final String EXTENSION_NCX = ".ncx";

@@ -1,9 +1,12 @@
 package com.github.mertakdut.exception;
 
+import java.io.Serial;
+
 public class OutOfPagesException extends Exception {
 
-	private int pageCount;
+	private final int pageCount;
 
+	@Serial
 	private static final long serialVersionUID = 2607084451614265004L;
 
 	public OutOfPagesException(int index, int pageCount) {

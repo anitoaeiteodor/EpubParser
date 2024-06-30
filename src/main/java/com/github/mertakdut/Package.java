@@ -4,6 +4,8 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -13,12 +15,17 @@ import com.github.mertakdut.exception.ReadingException;
 //package.opf
 public class Package extends BaseFindings {
 
-	private Metadata metadata;
-	private Manifest manifest;
-	private Spine spine;
-	private Guide guide;
+	private static final Logger log = LoggerFactory.getLogger(Package.class);
 
-	private boolean isMetadataFound, isManifestFound, isSpineFound, isGuideFound;
+	private final Metadata metadata;
+	private final Manifest manifest;
+	private final Spine spine;
+	private final Guide guide;
+
+	private boolean isMetadataFound;
+	private boolean isManifestFound;
+	private boolean isSpineFound;
+	private boolean isGuideFound;
 
 	public Package() {
 		metadata = new Metadata();
@@ -27,7 +34,7 @@ public class Package extends BaseFindings {
 		guide = new Guide();
 	}
 
-	public class Metadata {
+	public static class Metadata {
 		// Required Terms
 		private String title;
 		private String language;
@@ -155,28 +162,28 @@ public class Package extends BaseFindings {
 					}
 				}
 
-				for (int j = 0; j < fields.length; j++) {
-					
-					if (nodeName.equals(fields[j].getName())) {
+                for (Field field : fields) {
 
-						if (fields[j].getName().equals("subject")) {
-							if (subjectList == null) {
-								subjectList = new ArrayList<>();
-							}
-							subjectList.add(nodeList.item(i).getTextContent());
-						} else {
-							fields[j].setAccessible(true);
+                    if (nodeName.equals(field.getName())) {
 
-							try {
-								fields[j].set(this, nodeList.item(i).getTextContent());
-								break;
-							} catch (IllegalArgumentException | IllegalAccessException e) {
-								e.printStackTrace();
-								throw new ReadingException("Exception while parsing " + Constants.EXTENSION_OPF + " content: " + e.getMessage());
-							}
-						}
-					}
-				}
+                        if (field.getName().equals("subject")) {
+                            if (subjectList == null) {
+                                subjectList = new ArrayList<>();
+                            }
+                            subjectList.add(nodeList.item(i).getTextContent());
+                        } else {
+                            field.setAccessible(true);
+
+                            try {
+                                field.set(this, nodeList.item(i).getTextContent());
+                                break;
+                            } catch (IllegalArgumentException | IllegalAccessException e) {
+                                e.printStackTrace();
+                                throw new ReadingException("Exception while parsing " + Constants.EXTENSION_OPF + " content: " + e.getMessage());
+                            }
+                        }
+                    }
+                }
 			}
 
 			if (subjectList != null) {
@@ -193,26 +200,23 @@ public class Package extends BaseFindings {
 		}
 
 		void print() {
-			System.out.println("\n\nPrinting Metadata...\n");
-
-			System.out.println("title: " + getTitle());
-			System.out.println("language: " + getLanguage());
-			System.out.println("identifier: " + getIdentifier());
-
-			System.out.println("creator: " + getCreator());
-			System.out.println("contributor: " + getContributor());
-			System.out.println("publisher: " + getPublisher());
-			System.out.println("subject: " + getSubjects());
-			System.out.println("description: " + getDescription());
-			System.out.println("date: " + getDate());
-			System.out.println("type: " + getType());
-			System.out.println("format: " + getFormat());
-			System.out.println("source: " + getSource());
-			System.out.println("relation: " + getRelation());
-			System.out.println("coverage: " + getCoverage());
-			System.out.println("rights: " + getRights());
-
-			System.out.println("coverImageHref: " + coverImageId);
+			log.debug("\n\nPrinting Metadata...\n");
+			log.debug("title: {}", getTitle());
+			log.debug("language: {}", getLanguage());
+			log.debug("identifier: {}", getIdentifier());
+			log.debug("creator: {}", getCreator());
+			log.debug("contributor: {}", getContributor());
+			log.debug("publisher: {}", getPublisher());
+			log.debug("subject: {}", (Object[]) getSubjects());
+			log.debug("description: {}", getDescription());
+			log.debug("date: {}", getDate());
+			log.debug("type: {}", getType());
+			log.debug("format: {}", getFormat());
+			log.debug("source: {}", getSource());
+			log.debug("relation: {}", getRelation());
+			log.debug("coverage: {}", getCoverage());
+			log.debug("rights: {}", getRights());
+			log.debug("coverImageHref: {}", coverImageId);
 		}
 	}
 
@@ -232,12 +236,12 @@ public class Package extends BaseFindings {
 		}
 
 		public void print() {
-			System.out.println("\n\nPrinting Manifest...\n");
+			log.debug("Printing Manifest...");
 
 			for (int i = 0; i < xmlItemList.size(); i++) {
 				XmlItem xmlItem = xmlItemList.get(i);
 
-				System.out.println("xmlItem(" + i + ")" + ": value:" + xmlItem.getValue() + " attributes: " + xmlItem.getAttributes());
+				log.debug("xmlItem({}): value: {} attributes: {}", i, xmlItem.getValue(), xmlItem.getAttributes());
 			}
 		}
 	}
@@ -259,12 +263,12 @@ public class Package extends BaseFindings {
 		}
 
 		public void print() {
-			System.out.println("\n\nPrinting Spine...\n");
+			log.debug("Printing Spine...");
 
 			for (int i = 0; i < xmlItemList.size(); i++) {
 				XmlItem xmlItem = xmlItemList.get(i);
 
-				System.out.println("xmlItem(" + i + ")" + ": value:" + xmlItem.getValue() + " attributes: " + xmlItem.getAttributes());
+				log.debug("xmlItem({}): value: {} attributes: {}", i, xmlItem.getValue(), xmlItem.getAttributes());
 			}
 		}
 	}
@@ -285,12 +289,12 @@ public class Package extends BaseFindings {
 		}
 
 		void print() {
-			System.out.println("\n\nPrinting Guide...\n");
+			log.debug("Printing Guide...");
 
 			for (int i = 0; i < xmlItemList.size(); i++) {
 				XmlItem xmlItem = xmlItemList.get(i);
 
-				System.out.println("xmlItem(" + i + ")" + ": value:" + xmlItem.getValue() + " attributes: " + xmlItem.getAttributes());
+				log.debug("xmlItem({}): value: {} attributes: {}", i, xmlItem.getValue(), xmlItem.getAttributes());
 			}
 		}
 	}

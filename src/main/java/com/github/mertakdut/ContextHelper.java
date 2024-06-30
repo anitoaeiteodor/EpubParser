@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 import com.github.mertakdut.exception.ReadingException;
 
@@ -18,19 +19,18 @@ import com.github.mertakdut.exception.ReadingException;
  */
 class ContextHelper {
 
-	static String encodeToUtf8(String stringToEncode) throws ReadingException {
+	private ContextHelper() {
+		// private constructor
+	}
+
+	static String encodeToUtf8(String stringToEncode) {
 
 		String encodedString = null;
 
-		try {
-			encodedString = URLDecoder.decode(stringToEncode, "UTF-8"); // Charset.forName("UTF-8").name()
-			encodedString = URLEncoder.encode(encodedString, "UTF-8").replace("+", "%20"); // Charset.forName("UTF-8").name()
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-			throw new ReadingException("UnsupportedEncoding while encoding, " + stringToEncode + ", : " + e.getMessage());
-		}
+        encodedString = URLDecoder.decode(stringToEncode, StandardCharsets.UTF_8); // Charset.forName("UTF-8").name()
+        encodedString = URLEncoder.encode(encodedString, StandardCharsets.UTF_8).replace("+", "%20"); // Charset.forName("UTF-8").name()
 
-		return encodedString;
+        return encodedString;
 	}
 
 	static byte[] convertIsToByteArray(InputStream inputStream) throws IOException {
@@ -63,11 +63,11 @@ class ContextHelper {
 
 	static void copy(InputStream input, OutputStream output) throws IOException {
 
-		byte[] BUFFER = new byte[4096 * 1024];
+		byte[] buffer = new byte[4096 * 1024];
 
 		int bytesRead;
-		while ((bytesRead = input.read(BUFFER)) != -1) {
-			output.write(BUFFER, 0, bytesRead);
+		while ((bytesRead = input.read(buffer)) != -1) {
+			output.write(buffer, 0, bytesRead);
 		}
 	}
 

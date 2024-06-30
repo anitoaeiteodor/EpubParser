@@ -1,9 +1,11 @@
 package com.github.mertakdut;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 class Tag implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = -7115489705388170603L;
 
 	private String tagName;

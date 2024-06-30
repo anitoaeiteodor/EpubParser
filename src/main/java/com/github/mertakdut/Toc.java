@@ -1,5 +1,6 @@
 package com.github.mertakdut;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -7,6 +8,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -17,10 +20,13 @@ import com.github.mertakdut.exception.ReadingException;
 //toc.ncx
 public class Toc extends BaseFindings implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 8154412879349792795L;
 
-	private Head head;
-	private NavMap navMap;
+	private static final Logger log = LoggerFactory.getLogger(Toc.class);
+
+	private final Head head;
+	private final NavMap navMap;
 
 	private int lastPageIndex;
 
@@ -66,25 +72,26 @@ public class Toc extends BaseFindings implements Serializable {
 								attributeNodeValue = ContextHelper.getTextAfterCharacter(attributeNodeValue, Constants.COLON);
 							}
 
-							for (int j = 0; j < fields.length; j++) {
+                            for (Field field : fields) {
 
-								if (attributeNodeValue.equals(fields[j].getName())) {
+                                if (attributeNodeValue.equals(field.getName())) {
 
-									// Find content in attributes
-									for (int l = 0; l < attributes.getLength(); l++) {
-										if (attributes.item(l).getNodeName().equals("content")) {
-											fields[j].setAccessible(true);
-											try {
-												fields[j].set(this, attributes.item(l).getNodeValue());
-											} catch (IllegalArgumentException | IllegalAccessException | DOMException e) {
-												e.printStackTrace();
-												throw new ReadingException("Exception while parsing " + Constants.EXTENSION_NCX + " content: " + e.getMessage());
-											}
-											break;
-										}
-									}
-								}
-							}
+                                    // Find content in attributes
+                                    for (int l = 0; l < attributes.getLength(); l++) {
+                                        if (attributes.item(l).getNodeName().equals("content")) {
+                                            field.setAccessible(true);
+                                            try {
+                                                field.set(this, attributes.item(l).getNodeValue());
+                                            } catch (IllegalArgumentException | IllegalAccessException |
+                                                     DOMException e) {
+                                                e.printStackTrace();
+                                                throw new ReadingException("Exception while parsing " + Constants.EXTENSION_NCX + " content: " + e.getMessage());
+                                            }
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
 						}
 					}
 				}
@@ -108,16 +115,17 @@ public class Toc extends BaseFindings implements Serializable {
 		}
 
 		void print() {
-			System.out.println("\n\nPrinting Head...\n");
-			System.out.println("uid: " + getUid());
-			System.out.println("depth: " + getDepth());
-			System.out.println("totalPageCount: " + getTotalPageCount());
-			System.out.println("maxPageNumber: " + getMaxPageNumber());
+			log.debug("Printing Head...");
+			log.debug("uid: {}", getUid());
+			log.debug("depth: {}", getDepth());
+			log.debug("totalPageCount: {}", getTotalPageCount());
+			log.debug("maxPageNumber: {}", getMaxPageNumber());
 		}
 	}
 
 	public class NavMap implements Serializable {
 
+		@Serial
 		private static final long serialVersionUID = -3629764613712749465L;
 
 		private List<NavPoint> navPoints;
@@ -149,13 +157,11 @@ public class Toc extends BaseFindings implements Serializable {
 					for (int j = 0; j < nodeMap.getLength(); j++) {
 						Node attribute = nodeMap.item(j);
 
-						if (attribute.getNodeName().equals("id")) {
-							navPoint.setId(attribute.getNodeValue());
-						} else if (attribute.getNodeName().equals("playOrder")) {
-							navPoint.setPlayOrder(Integer.parseInt(attribute.getNodeValue()));
-						} else if (attribute.getNodeName().equals("type")) {
-							navPoint.setType(attribute.getNodeValue());
-						}
+                        switch (attribute.getNodeName()) {
+                            case "id" -> navPoint.setId(attribute.getNodeValue());
+                            case "playOrder" -> navPoint.setPlayOrder(Integer.parseInt(attribute.getNodeValue()));
+                            case "type" -> navPoint.setType(attribute.getNodeValue());
+                        }
 
 					}
 
@@ -230,24 +236,25 @@ public class Toc extends BaseFindings implements Serializable {
 		}
 
 		void sortNavMaps() {
-
 			// If playOrders are not given, then use the order in file.
-			Collections.sort(this.navPoints, new Comparator<NavPoint>() {
-				public int compare(NavPoint o1, NavPoint o2) {
-					return o1.getPlayOrder() < o2.getPlayOrder() ? -1 : 1; // if equals, first occurence should be sorted as first.
-				}
-			});
+			this.navPoints.sort((o1, o2) -> {
+                return o1.getPlayOrder() < o2.getPlayOrder() ? -1 : 1; // if equals, first occurrence should be sorted as first.
+            });
 
 		}
 
 		void print() {
-			System.out.println("\n\nPrinting NavPoints...\n");
+			log.debug("Printing NavPoints...");
 
 			for (int i = 0; i < this.navPoints.size(); i++) {
 				NavPoint navPoint = this.navPoints.get(i);
 
-				System.out
-						.println("navPoint (" + i + ") id: " + navPoint.getId() + ", playOrder: " + navPoint.getPlayOrder() + ", navLabel(Text): " + navPoint.getNavLabel() + ", content src: " + navPoint.getContentSrc());
+				log.debug("navPoint ({}) id: {}, playOrder: {}, navLabel(Text): {}, content src: {}",
+						i,
+						navPoint.getId(),
+						navPoint.getPlayOrder(),
+						navPoint.getNavLabel(),
+						navPoint.getContentSrc());
 			}
 		}
 	}

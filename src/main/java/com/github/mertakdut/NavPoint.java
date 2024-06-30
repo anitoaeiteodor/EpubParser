@@ -1,10 +1,12 @@
 package com.github.mertakdut;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
 public class NavPoint implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = -5558515239198872045L;
 
 	private String id;

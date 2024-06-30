@@ -21,6 +21,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
 import org.apache.commons.codec.binary.Base64;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import com.github.mertakdut.BaseFindings.XmlItem;
@@ -28,6 +30,8 @@ import com.github.mertakdut.exception.OutOfPagesException;
 import com.github.mertakdut.exception.ReadingException;
 
 class Content {
+
+	private static final Logger log = LoggerFactory.getLogger(Content.class);
 
 	private String zipFilePath;
 
@@ -54,10 +58,12 @@ class Content {
 
 	// Debug
 	void print() {
-		System.out.println("Printing zipEntryNames...\n");
+		log.debug("Printing zipEntryNames...\n");
 
 		for (int i = 0; i < entryNames.size(); i++) {
-			System.out.println("(" + i + ")" + entryNames.get(i));
+			if (log.isDebugEnabled()) {
+				log.debug("({}) {}", i, entryNames.get(i));
+			}
 		}
 
 		getContainer().print();
@@ -149,8 +155,8 @@ class Content {
 						Pair<Integer, Integer> bodyIntervals = getNextAvailableAnchorIndex2(index, entryName, htmlBody, href, fileName);
 
 						if (bodyIntervals != null) {
-							trimStartPosition = bodyIntervals.getFirst();
-							trimEndPosition = bodyIntervals.getSecond();
+							trimStartPosition = bodyIntervals.first();
+							trimEndPosition = bodyIntervals.second();
 						} else {
 							return getBookSection(index);
 						}
@@ -197,7 +203,7 @@ class Content {
 			}
 
 			if (!isSourceFileFound) {
-				System.out.println("Source file not found!");
+				log.warn("Source file not found!");
 				getToc().getNavMap().getNavPoints().remove(index);
 				return getBookSection(index);
 			}
@@ -642,9 +648,9 @@ class Content {
 
 		StringBuilder openingTagsBuilder = new StringBuilder();
 
-		for (ListIterator<Tag> iterator = openedTags.listIterator(); iterator.hasNext();) {
-			openingTagsBuilder.append(Constants.TAG_OPENING).append(iterator.next().getFullTagName()).append(Constants.TAG_CLOSING);
-		}
+        for (Tag openedTag : openedTags) {
+            openingTagsBuilder.append(Constants.TAG_OPENING).append(openedTag.getFullTagName()).append(Constants.TAG_CLOSING);
+        }
 
 		return openingTagsBuilder.toString();
 	}
@@ -1224,7 +1230,7 @@ class Content {
 						}
 
 						if (!isCssFileFound) {
-							System.out.println("Referenced css file not found!");
+							log.warn("Referenced css file not found!");
 
 							if (nonExistingHrefList == null) {
 								nonExistingHrefList = new ArrayList<>();
@@ -1335,7 +1341,7 @@ class Content {
 					}
 
 					if (!isImageFileFound) {
-						System.out.println("Referenced image file not found: " + srcHref);
+						log.warn("Referenced image file not found: {}", srcHref);
 
 						if (nonExistingHrefList == null) {
 							nonExistingHrefList = new ArrayList<>();
@@ -1588,7 +1594,7 @@ class Content {
 			htmlBodyMarkingsPair = markOmittedTags(currentEntryTags, htmlBody, trimStartPosition, trimEndPosition);
 
 			if (htmlBodyMarkingsPair != null) {
-				htmlBody = htmlBodyMarkingsPair.getFirst();
+				htmlBody = htmlBodyMarkingsPair.first();
 			}
 		}
 
@@ -1601,7 +1607,7 @@ class Content {
 
 		if (htmlBodyMarkingsPair != null) {
 
-			List<String> stringsToRemove = htmlBodyMarkingsPair.getSecond();
+			List<String> stringsToRemove = htmlBodyMarkingsPair.second();
 
 			if (stringsToRemove != null) {
 				for (String stringToRemove : stringsToRemove) {
