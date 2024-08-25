@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.mertakdut</groupId>
 	<artifactId>EpubParser</artifactId>
-	<version>1.0.95</version>
+	<version>zeno-1.0.96</version>
 	<packaging>jar</packaging>
 
 	<name>EpubParser</name>
@@ -44,10 +44,6 @@
 			<comments>A business-friendly OSS license</comments>
 		</license>
 	</licenses>
-
-	<prerequisites>
-		<maven>3.0.4</maven>
-	</prerequisites>
 
 	<dependencies>
 		<dependency>
