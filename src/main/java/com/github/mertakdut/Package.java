@@ -2,7 +2,9 @@ package com.github.mertakdut;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +43,7 @@ public class Package extends BaseFindings {
 		private String identifier;
 
 		// Optional Terms
-		private String creator;
+		private String[] creator;
 		private String contributor;
 		private String publisher;
 		private String[] subject;
@@ -67,8 +69,12 @@ public class Package extends BaseFindings {
 			return contributor;
 		}
 
-		public String getCreator() {
+		public String[] getCreators() {
 			return creator;
+		}
+
+		public List<String> getAuthors() {
+			return Arrays.stream(creator).toList();
 		}
 
 		public String getTitle() {
@@ -128,6 +134,7 @@ public class Package extends BaseFindings {
 			Field[] fields = Package.Metadata.class.getDeclaredFields();
 
 			List<String> subjectList = null;
+			List<String> creatorsList = null;
 
 			for (int i = 0; i < nodeList.getLength(); i++) {
 				Node node = nodeList.item(i);
@@ -171,7 +178,12 @@ public class Package extends BaseFindings {
                                 subjectList = new ArrayList<>();
                             }
                             subjectList.add(nodeList.item(i).getTextContent());
-                        } else {
+                        } else if (field.getName().equals("creator")) {
+							if (creatorsList == null) {
+								creatorsList = new ArrayList();
+							}
+							creatorsList.add(nodeList.item(i).getTextContent());
+						} else {
                             field.setAccessible(true);
 
                             try {
@@ -187,24 +199,31 @@ public class Package extends BaseFindings {
 			}
 
 			if (subjectList != null) {
-				Field field;
 				try {
-					field = Package.Metadata.class.getDeclaredField("subject");
+					var field = Package.Metadata.class.getDeclaredField("subject");
 					field.setAccessible(true);
 					field.set(this, subjectList.toArray(new String[subjectList.size()]));
 				} catch (IllegalArgumentException | IllegalAccessException | NegativeArraySizeException | NoSuchFieldException | SecurityException e) {
-					e.printStackTrace();
+					throw new ReadingException("Exception while parsing subjects " + Constants.EXTENSION_OPF + " content: " + e.getMessage());
+				}
+			}
+			if (creatorsList != null) {
+				try {
+					var field = Package.Metadata.class.getDeclaredField("creator");
+					field.setAccessible(true);
+					field.set(this, creatorsList.toArray(new String[creatorsList.size()]));
+				} catch (IllegalArgumentException | IllegalAccessException | NegativeArraySizeException | NoSuchFieldException | SecurityException e) {
 					throw new ReadingException("Exception while parsing subjects " + Constants.EXTENSION_OPF + " content: " + e.getMessage());
 				}
 			}
 		}
 
-		void print() {
+		public void print() {
 			log.debug("\n\nPrinting Metadata...\n");
 			log.debug("title: {}", getTitle());
 			log.debug("language: {}", getLanguage());
 			log.debug("identifier: {}", getIdentifier());
-			log.debug("creator: {}", getCreator());
+			log.debug("creators: {}", String.join(";", getCreators()));
 			log.debug("contributor: {}", getContributor());
 			log.debug("publisher: {}", getPublisher());
 			log.debug("subject: {}", (Object[]) getSubjects());
