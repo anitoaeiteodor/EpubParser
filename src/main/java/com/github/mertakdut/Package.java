@@ -73,6 +73,14 @@ public class Package extends BaseFindings {
 			return creator;
 		}
 
+		public List<String> getTags() {
+			// Tags are sometimes stored in the "subject" fields
+			if (subject != null) {
+				return Arrays.stream(subject).toList();
+			}
+			return List.of();
+		}
+
 		public List<String> getAuthors() {
 			return Arrays.stream(creator).toList();
 		}
